@@ -140,7 +140,7 @@ void InfoPanel::draw(const garden::Garden& garden, SpriteRenderer& sprites, glm:
     y = top - text_.capHeight(1.0f);
     bold_.draw("Controls", col3X, y, 0.9f, kText);
     for (const std::string& c : controls_) {
-        y -= line * 0.85f;
+        y -= line * 0.78f;
         text_.draw(c, col3X, y, 0.8f, kDim);
     }
 }

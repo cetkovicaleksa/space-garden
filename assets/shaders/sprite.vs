@@ -6,9 +6,10 @@ out vec2 TexCoord;
 
 uniform mat4 uModel;
 uniform mat4 uProjection;
+uniform vec2 uUvScale; // > 1 repeats the texture (tiling)
 
 void main()
 {
-    TexCoord = aTexCoord;
+    TexCoord = aTexCoord * uUvScale;
     gl_Position = uProjection * uModel * vec4(aPos, 0.0, 1.0);
 }

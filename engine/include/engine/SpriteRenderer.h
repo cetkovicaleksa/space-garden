@@ -23,6 +23,9 @@ public:
 
     void draw(const Texture2D& texture, glm::vec2 pos, glm::vec2 size,
               glm::vec4 tint = glm::vec4(1.0f), float rotationDeg = 0.0f);
+    // Texture repeated every `tileSize` units (texture must use GL_REPEAT wrapping).
+    void drawTiled(const Texture2D& texture, glm::vec2 pos, glm::vec2 size, glm::vec2 tileSize,
+                   glm::vec4 tint = glm::vec4(1.0f));
     void drawRect(glm::vec2 pos, glm::vec2 size, glm::vec4 color, float rotationDeg = 0.0f);
     // Rectangle outline made of four thin rectangles.
     void drawFrame(glm::vec2 pos, glm::vec2 size, float thickness, glm::vec4 color);

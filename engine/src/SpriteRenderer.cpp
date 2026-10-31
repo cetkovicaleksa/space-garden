@@ -36,6 +36,7 @@ SpriteRenderer::SpriteRenderer()
 
     shader_.use();
     shader_.setInt("uImage", 0);
+    shader_.setVec2("uUvScale", 1.0f, 1.0f);
 }
 
 SpriteRenderer::~SpriteRenderer()
@@ -76,6 +77,18 @@ void SpriteRenderer::draw(const Texture2D& texture, glm::vec2 pos, glm::vec2 siz
     shader_.setVec4("uColor", tint);
     texture.bind(0);
     submit(pos, size, rotationDeg);
+}
+
+void SpriteRenderer::drawTiled(const Texture2D& texture, glm::vec2 pos, glm::vec2 size, glm::vec2 tileSize,
+                               glm::vec4 tint)
+{
+    shader_.use();
+    shader_.setInt("uMode", 1);
+    shader_.setVec4("uColor", tint);
+    shader_.setVec2("uUvScale", size / tileSize);
+    texture.bind(0);
+    submit(pos, size, 0.0f);
+    shader_.setVec2("uUvScale", 1.0f, 1.0f);
 }
 
 void SpriteRenderer::drawRect(glm::vec2 pos, glm::vec2 size, glm::vec4 color, float rotationDeg)
