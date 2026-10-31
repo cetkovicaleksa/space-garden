@@ -36,4 +36,5 @@ target_link_libraries(glad PUBLIC vendor_headers)
 
 add_subdirectory(core)
 add_subdirectory(tests)
+add_subdirectory(engine)
 add_subdirectory(app2d)
