@@ -45,18 +45,23 @@ jobs:
       - name: Build
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DSPACE_GARDEN_STATIC_RUNTIME=ON ${{ matrix.configure }}
-          cmake --build build -j --target space_garden_2d
+          # The 3D app exists from v3d on; older tags only have the 2D app.
+          TARGETS=space_garden_2d
+          if [ -d app3d ]; then TARGETS="space_garden_2d space_garden_3d"; fi
+          cmake --build build -j --target $TARGETS
 
       - name: Test core logic
         if: matrix.platform == 'linux'
         run: |
-          cmake --build build -j --target core_tests
+          cmake --build build -j --target core_tests $( [ -f tests/picking_tests.cpp ] && echo picking_tests )
           ctest --test-dir build --output-on-failure
 
       - name: Package
         run: |
-          NAME=space-garden-2d-${TAG}-${{ matrix.platform }}-x86_64
-          DIR=space-garden-2d-${{ matrix.platform }}-x86_64
+          APP=space-garden-2d
+          if [ -d app3d ]; then APP=space-garden; fi
+          NAME=$APP-${TAG}-${{ matrix.platform }}-x86_64
+          DIR=$APP-${{ matrix.platform }}-x86_64
           cmake --install build --prefix "dist/$DIR" --strip
           cd dist
           if [ "${{ matrix.archive }}" = zip ]; then zip -qr "$NAME.zip" "$DIR"; else tar czf "$NAME.tar.gz" "$DIR"; fi
@@ -67,6 +72,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$TAG" $(ls dist/*.tar.gz dist/*.zip dist/*.sha256 2>/dev/null) --clobber --repo "$GITHUB_REPOSITORY"
-          if [ "${{ matrix.platform }}" = linux ] && [ -f docs/screenshots/space-garden-2d.png ]; then
-            gh release upload "$TAG" docs/screenshots/space-garden-2d.png --clobber --repo "$GITHUB_REPOSITORY"
+          if [ "${{ matrix.platform }}" = linux ]; then
+            for shot in docs/screenshots/space-garden-*.png; do
+              if [ -f "$shot" ]; then gh release upload "$TAG" "$shot" --clobber --repo "$GITHUB_REPOSITORY"; fi
+            done
           fi

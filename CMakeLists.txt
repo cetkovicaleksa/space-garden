@@ -56,6 +56,12 @@ FetchContent_Declare(assimp
     GIT_TAG        v5.4.3
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(assimp)
+if(MINGW)
+    # Older MinGW runtimes do not export _fstat32, which Assimp falls back to when
+    # __MSVCRT_VERSION__ is low; make it use _fstat64 (available everywhere).
+    set_source_files_properties(${assimp_SOURCE_DIR}/code/Common/DefaultIOStream.cpp
+        TARGET_DIRECTORY assimp PROPERTIES COMPILE_DEFINITIONS "__MSVCRT_VERSION__=0x0700")
+endif()
 
 # --- Vendored headers (glad, KHR, glm, stb_image, learnopengl) --------------
 add_library(vendor_headers INTERFACE)
