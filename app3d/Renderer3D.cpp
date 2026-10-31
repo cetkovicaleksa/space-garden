@@ -74,6 +74,7 @@ prim::MeshData potStripe(const prim::PotDims& p, float y0, float y1, float offse
 
 Renderer3D::Renderer3D()
     : scene_(engine::shaderPath("scene.vs"), engine::shaderPath("scene.fs"))
+    , beam_(engine::shaderPath("scene.vs"), engine::shaderPath("beam.fs"))
     , metal_(tex("metal.png"), true)
     , wall_(tex("wall.png"), true)
     , space_(tex("space.png"))
@@ -132,9 +133,31 @@ Renderer3D::Renderer3D()
                                {0.0f, kPot.height - 0.018f, 0.0f}));
     selectFloor_ = GpuMesh(prim::ring(kPot.bottomRadius + 0.03f, kPot.bottomRadius + 0.075f, 0.004f));
 
-    tankBacking_ = GpuMesh(merge({
-        prim::box({kTankWindowMin.x, kTankWindowMin.y, kTankMax.z}, {kTankWindowMax.x, kTankWindowMax.y, kTankMax.z + 0.01f}),
-    }));
+    // Tank window: dark backing on the tank front, a water column (unit height, scaled by the water
+    // ratio when drawn), a framed glass case in front of it.
+    const float front = kTankMax.z;
+    tankBacking_ = GpuMesh(prim::box({kTankWindowMin.x, kTankWindowMin.y, front}, {kTankWindowMax.x, kTankWindowMax.y, front + 0.01f}));
+    water_ = GpuMesh(prim::box({kTankWindowMin.x + 0.006f, 0.0f, front + 0.012f}, {kTankWindowMax.x - 0.006f, 1.0f, front + 0.07f}));
+    waterSurface_ = GpuMesh(prim::box({kTankWindowMin.x + 0.005f, -0.012f, front + 0.011f}, {kTankWindowMax.x - 0.005f, 0.0f, front + 0.071f}));
+    tankGlass_ = GpuMesh(prim::box({kTankWindowMin.x - 0.004f, kTankWindowMin.y - 0.004f, front - 0.01f},
+                                   {kTankWindowMax.x + 0.004f, kTankWindowMax.y + 0.004f, front + 0.08f}));
+    prim::MeshData ticks;
+    for (int k = 1; k < 4; ++k) {
+        const float y = kTankWindowMin.y + (kTankWindowMax.y - kTankWindowMin.y) * float(k) / 4.0f;
+        ticks.append(prim::box({kTankWindowMax.x + 0.004f, y - 0.004f, front}, {kTankWindowMax.x + 0.05f, y + 0.004f, front + 0.095f}));
+    }
+    tankFrame_ = GpuMesh(merge({frame(kTankWindowMin, kTankWindowMax, front, 0.035f, 0.09f), ticks}));
+
+    // Light beam: from the lamp strip down to the floor, widening and following the light tilt.
+    const float topY = kLampMin.y - 0.02f, bottomY = kFloorY + 0.003f;
+    const glm::vec3 beamCorners[8] = {
+        {kLampMin.x - 0.15f, bottomY, -1.15f}, {kLampMax.x + 0.15f, bottomY, -1.15f},
+        {kLampMax.x + 0.15f, bottomY, -0.30f}, {kLampMin.x - 0.15f, bottomY, -0.30f},
+        {kLampMin.x + 0.06f, topY, kLampMin.z + 0.06f}, {kLampMax.x - 0.06f, topY, kLampMin.z + 0.06f},
+        {kLampMax.x - 0.06f, topY, kLampMax.z - 0.06f}, {kLampMin.x + 0.06f, topY, kLampMax.z - 0.06f},
+    };
+    beamVolume_ = GpuMesh(prim::hexahedron(beamCorners));
+    droplet_ = GpuMesh(prim::sphere(1.0f, 16, 12));
 }
 
 int Renderer3D::pickPot(const garden::Garden& garden, const picking::Ray& ray)
@@ -193,6 +216,8 @@ void Renderer3D::draw(const garden::Garden& garden, const Frame& f)
     drawLamp(garden);
     drawTank(garden);
     drawPots(garden);
+    drawDroplets(garden);
+    drawTransparent(garden, f);
 }
 
 void Renderer3D::drawCabinet()
@@ -215,11 +240,89 @@ void Renderer3D::drawLamp(const garden::Garden& garden)
                                 : Material{nullptr, glm::vec3(0.35f, 0.36f, 0.40f), 0.6f, 64.0f});
 }
 
-void Renderer3D::drawTank(const garden::Garden&)
+void Renderer3D::drawTank(const garden::Garden& garden)
 {
     const glm::mat4 I(1.0f);
     drawMesh(tankBody_, I, {&metal_, glm::vec3(0.75f, 0.82f, 0.95f), 0.5f, 48.0f});
     drawMesh(tankBacking_, I, {nullptr, glm::vec3(0.05f, 0.07f, 0.11f), 0.3f, 32.0f});
+    drawMesh(tankFrame_, I, {&metal_, glm::vec3(0.55f, 0.58f, 0.66f), 0.6f, 64.0f});
+
+    // Water column through the window; its height is the tank ratio.
+    const float ratio = std::clamp(garden.tank().ratio(), 0.0f, 1.0f);
+    if (ratio > 0.0f) {
+        const float h = (kTankWindowMax.y - kTankWindowMin.y) * ratio;
+        const glm::mat4 column = glm::scale(glm::translate(I, {0.0f, kTankWindowMin.y, 0.0f}), {1.0f, h, 1.0f});
+        drawMesh(water_, column, {nullptr, glm::vec3(0.10f, 0.38f, 0.85f), 0.8f, 96.0f, glm::vec3(0.02f, 0.10f, 0.25f)});
+        drawMesh(waterSurface_, glm::translate(I, {0.0f, kTankWindowMin.y + h, 0.0f}),
+                 {nullptr, glm::vec3(0.45f, 0.72f, 1.0f), 0.9f, 128.0f, glm::vec3(0.08f, 0.20f, 0.35f)});
+    }
+}
+
+void Renderer3D::drawDroplets(const garden::Garden& garden)
+{
+    // Core gives each droplet a normalized height above the soil (1 = spawn, 0 = soil) and an
+    // x offset in [-1, 1]; the depth offset is derived from x so the stream is not a flat sheet.
+    const Material water{nullptr, glm::vec3(0.35f, 0.65f, 1.0f), 0.9f, 128.0f, glm::vec3(0.05f, 0.15f, 0.30f)};
+    for (int i = 0; i < kPotCount && i < garden.potCount(); ++i) {
+        for (const garden::Droplet& d : garden.pot(i).droplets) {
+            if (!d.visible())
+                continue;
+            const glm::vec3 offset(d.x * kDropletSpread, kDropletRadius + d.y * kDropletFall,
+                                   std::sin(d.x * 7.3f) * kDropletSpread * 0.7f);
+            const glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), soilCenter(i) + offset),
+                                               glm::vec3(kDropletRadius, kDropletRadius * 1.5f, kDropletRadius));
+            drawMesh(droplet_, model, water);
+        }
+    }
+}
+
+void Renderer3D::drawTransparent(const garden::Garden& garden, const Frame& f)
+{
+    // Transparent objects are drawn after all opaque ones, sorted back to front, without depth writes
+    // in the color pass. Each object first writes only its depth, then draws color with GL_LEQUAL, so
+    // only its nearest surface is blended. This keeps the picture the same with culling on or off.
+    struct Item {
+        float distance;
+        bool beam;
+    };
+    const glm::vec3 glassCenter(0.5f * (kTankWindowMin.x + kTankWindowMax.x), 0.5f * (kTankWindowMin.y + kTankWindowMax.y), kTankMax.z + 0.035f);
+    const glm::vec3 beamCenter(0.5f * (kLampMin.x + kLampMax.x), 0.5f * (kLampMin.y + kFloorY), -0.65f);
+    Item items[2] = {{glm::length(f.cameraPos - glassCenter), false}, {glm::length(f.cameraPos - beamCenter), true}};
+    std::sort(std::begin(items), std::end(items), [](const Item& a, const Item& b) { return a.distance > b.distance; });
+
+    glEnable(GL_BLEND);
+    glDepthFunc(GL_LEQUAL);
+    for (const Item& item : items) {
+        if (item.beam && !garden.lamp().on)
+            continue;
+        for (int pass = 0; pass < 2; ++pass) {
+            const bool depthOnly = pass == 0;
+            glColorMask(!depthOnly, !depthOnly, !depthOnly, !depthOnly);
+            glDepthMask(depthOnly ? GL_TRUE : GL_FALSE);
+            if (item.beam) {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE); // light adds up
+                beam_.use();
+                beam_.setMat4("uView", f.view);
+                beam_.setMat4("uProjection", f.projection);
+                beam_.setMat4("uModel", glm::mat4(1.0f));
+                beam_.setMat3("uNormalMatrix", glm::mat3(1.0f));
+                beam_.setVec3("uViewPos", f.cameraPos);
+                beam_.setVec3("uColor", glm::vec3(1.0f, 0.92f, 0.65f));
+                beam_.setFloat("uAlpha", 0.22f);
+                beam_.setFloat("uTopY", kLampMin.y - 0.02f);
+                beam_.setFloat("uBottomY", kFloorY);
+                beamVolume_.draw();
+                scene_.use();
+            } else {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                drawMesh(tankGlass_, glm::mat4(1.0f), {nullptr, glm::vec3(0.55f, 0.75f, 0.95f), 1.0f, 128.0f, glm::vec3(0.0f), 0.22f});
+            }
+        }
+    }
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Renderer3D::drawPots(const garden::Garden& garden)

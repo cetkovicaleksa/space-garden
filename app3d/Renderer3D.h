@@ -47,15 +47,19 @@ private:
     void drawLamp(const garden::Garden& garden);
     void drawTank(const garden::Garden& garden);
     void drawPlant(garden::Stage stage, const glm::mat4& model);
+    void drawDroplets(const garden::Garden& garden);
+    void drawTransparent(const garden::Garden& garden, const Frame& frame);
 
     Shader scene_;
+    Shader beam_;
 
     engine::Texture2D metal_, wall_, space_, soilTex_;
 
     GpuMesh cabinet_, cabinetInner_, windowQuad_, windowFrame_;
     GpuMesh potShell_, potSoil_, potStripe_;
     GpuMesh lampBody_, lampMounts_, lampStrip_;
-    GpuMesh tankBody_, tankBacking_;
+    GpuMesh tankBody_, tankBacking_, tankFrame_, tankGlass_, water_, waterSurface_;
+    GpuMesh beamVolume_, droplet_;
 
     // Plant models for the seed, sprout and mature stages (Assimp). If a file is missing, a simple
     // procedural stand-in is drawn instead.
