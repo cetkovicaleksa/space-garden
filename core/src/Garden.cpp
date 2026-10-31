@@ -6,7 +6,7 @@ namespace garden {
 
 Garden::Garden(const Config& config)
     : config_(config)
-    , pots_(static_cast<size_t>(std::max(0, config.potCount)))
+    , pots_(static_cast<std::size_t>(std::max(0, config.potCount)))
 {
     tank_.capacity = config_.tankCapacity;
     tank_.water = config_.tankCapacity; // the tank starts full
@@ -38,7 +38,7 @@ CommandResult Garden::apply(Command c)
             break;
         }
         {
-            Pot& p = pots_[static_cast<size_t>(selected_)];
+            Pot& p = pots_[static_cast<std::size_t>(selected_)];
             if (c == Command::Sow)        result = sow(p);
             else if (c == Command::Water) result = water(p);
             else                          result = harvest(p);

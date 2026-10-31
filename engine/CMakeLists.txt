@@ -14,3 +14,6 @@ target_compile_definitions(garden_engine PRIVATE SPACE_GARDEN_ASSETS_DIR="${PROJ
 if(NOT MSVC)
     target_compile_options(garden_engine PRIVATE -Wall -Wextra)
 endif()
+if(WIN32)
+    target_link_libraries(garden_engine PRIVATE winmm)
+endif()

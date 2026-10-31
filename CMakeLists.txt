@@ -47,7 +47,19 @@ target_include_directories(vendor_headers SYSTEM INTERFACE ${CMAKE_CURRENT_SOURC
 add_library(glad STATIC third_party/glad/glad.c)
 target_link_libraries(glad PUBLIC vendor_headers)
 
+option(SPACE_GARDEN_STATIC_RUNTIME "Statically link the C++ runtime (portable release binaries)" OFF)
+if(SPACE_GARDEN_STATIC_RUNTIME AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+    add_link_options(-static-libgcc -static-libstdc++)
+    if(MINGW)
+        add_link_options(-static)
+    endif()
+endif()
+
 add_subdirectory(core)
 add_subdirectory(tests)
 add_subdirectory(engine)
 add_subdirectory(app2d)
+
+# Release package: the app plus assets/ next to it (found at runtime relative to the executable).
+install(DIRECTORY assets/ DESTINATION assets)
+install(FILES README.md DESTINATION .)

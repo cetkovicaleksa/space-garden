@@ -13,6 +13,14 @@
 #include <exception>
 #include <iostream>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 int main()
 {
     try {
@@ -69,6 +77,9 @@ int main()
         }
     } catch (const std::exception& e) {
         std::cerr << "Fatal: " << e.what() << '\n';
+#ifdef _WIN32
+        MessageBoxA(nullptr, e.what(), "Space Garden 2D", MB_OK | MB_ICONERROR); // no console in release builds
+#endif
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

@@ -9,6 +9,15 @@
 #include <stdexcept>
 #include <thread>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <timeapi.h>
+#endif
+
 namespace engine {
 
 namespace {
@@ -21,6 +30,9 @@ void glfwErrorCallback(int code, const char* description)
 Window::Window(const char* title, int targetFps)
     : frameDuration_(1.0 / double(targetFps > 0 ? targetFps : 75))
 {
+#ifdef _WIN32
+    timeBeginPeriod(1); // 1 ms sleep granularity, otherwise the 75 FPS limiter oversleeps
+#endif
     glfwSetErrorCallback(glfwErrorCallback);
     if (!glfwInit())
         throw std::runtime_error("Failed to initialize GLFW");
@@ -82,6 +94,9 @@ Window::~Window()
     if (window_)
         glfwDestroyWindow(window_);
     glfwTerminate();
+#ifdef _WIN32
+    timeEndPeriod(1);
+#endif
 }
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(window_); }

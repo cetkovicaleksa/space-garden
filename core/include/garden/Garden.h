@@ -6,6 +6,7 @@
 #include "Pot.h"
 #include "Tank.h"
 
+#include <cstddef>
 #include <vector>
 
 namespace garden {
@@ -28,8 +29,8 @@ public:
     void update(float dt);
 
     int potCount() const { return static_cast<int>(pots_.size()); }
-    const Pot& pot(int i) const { return pots_.at(static_cast<size_t>(i)); }
-    const Pot* selectedPot() const { return hasSelection() ? &pots_[static_cast<size_t>(selected_)] : nullptr; }
+    const Pot& pot(int i) const { return pots_.at(static_cast<std::size_t>(i)); }
+    const Pot* selectedPot() const { return hasSelection() ? &pots_[static_cast<std::size_t>(selected_)] : nullptr; }
     const Lamp& lamp() const { return lamp_; }
     const Tank& tank() const { return tank_; }
     const Config& config() const { return config_; }

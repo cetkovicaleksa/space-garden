@@ -24,8 +24,28 @@ cmake --build build -j
 ```
 
 The app opens fullscreen on the primary monitor and runs at 75 FPS. Set `SPACE_GARDEN_WINDOWED=1`
-to open a 1280×720 window while debugging. Assets are found through an absolute path baked in at
-configure time, so the binary can be started from any directory (`SPACE_GARDEN_ASSETS` overrides it).
+to open a 1280×720 window while debugging. Assets are looked up in `assets/` next to the executable,
+then in the source tree (path baked in at configure time), so the binary can be started from any
+directory. `SPACE_GARDEN_ASSETS` overrides both.
+
+### Release packages
+
+Prebuilt Linux and Windows builds are attached to the GitHub releases. To build them yourself:
+
+```sh
+# Linux (run on the oldest distro you want to support; the binary needs its glibc or newer)
+cmake -B build-rel -DCMAKE_BUILD_TYPE=Release -DSPACE_GARDEN_STATIC_RUNTIME=ON
+cmake --build build-rel -j
+cmake --install build-rel --prefix dist/space-garden-2d-linux-x86_64 --strip
+
+# Windows, cross-compiled with MinGW-w64 (apt install g++-mingw-w64-x86-64-posix)
+cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64-x86_64.cmake \
+      -DCMAKE_BUILD_TYPE=Release -DSPACE_GARDEN_STATIC_RUNTIME=ON
+cmake --build build-win -j --target space_garden_2d
+cmake --install build-win --prefix dist/space-garden-2d-windows-x86_64 --strip
+```
+
+A package is the executable with `assets/` next to it; the app looks there first.
 
 Logic unit tests and a console version of the garden:
 
