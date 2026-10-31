@@ -252,13 +252,20 @@ Each step is one commit (sometimes two). "Verify" is what you check yourself bef
 | Perspective projection | — | ✔ | 14 |
 | Constant-speed droplets (accelerated also allowed) | ✔ | ✔ | 2, 12, 20 |
 
+## Decisions taken
+
+- **D1** GLM 1.0.1 copied into `include/glm` with the other header-only libraries.
+- **D2** Keys: `S` sow, `W` water, `H` harvest, `L` lamp, `R` refill; `1`/`2`/`3` also select pots.
+- **D3** Cursor: OS cursor via `glfwCreateCursor` (two 64×64 glove images, hotspot at the fingertip).
+- **D4** UI language: English.
+- **D5** Clicking empty space keeps the current selection (the panel stays useful); hovering a pot shows a faint frame.
+- 2D layout uses a 1920×1080 virtual canvas letterboxed into the real framebuffer.
+- Textures are drawn procedurally by `tools/generate_assets.py` (no third-party image licenses).
+- Default tuning (`core/include/garden/Config.h`): pot capacity 100, pour 25, tank 300,
+  growth 0.05/s (20 s to mature), drink 4/s.
+
 ## Open decisions (I'll ask you when we reach them)
 
-- **D1** GLM: FetchContent or copy into `include/` with the other header-only libs? (Default: `include/glm`, matches your rule.)
-- **D2** Exact key bindings and whether keys 1/2/3 also select pots.
-- **D3** Cursor: OS cursor via `glfwCreateCursor` (simple, crisp) vs a textured quad drawn by our shader (more "OpenGL", allows scaling).
-- **D4** UI language: Serbian (Latin or Cyrillic) or English labels.
-- **D5** Clicking empty space: deselect or keep selection.
 - **D6** Lamp light type in 3D: point light vs spotlight cone (spotlight matches the 2D beam).
 - **D7** 3D picking: math ray test (recommended) vs color-ID picking via an offscreen framebuffer.
 - Tuning values in `Config` (growth speed, pour size, capacity) — chosen after step 11 by feel.
