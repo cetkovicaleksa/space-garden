@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <exception>
+#include <iostream>
 
 using namespace scene;
 
@@ -116,6 +118,16 @@ Renderer3D::Renderer3D()
         moved(prim::cylinder(0.035f, kCabinetMax.y - kPanel - kTankMax.y - 0.05f), // pipe to the roof
               tankTop + glm::vec3(0.0f, 0.05f, 0.0f)),
     }));
+    const char* stageFiles[3] = {"models/seed.obj", "models/sprout.obj", "models/mature.obj"};
+    for (int i = 0; i < 3; ++i) {
+        try {
+            stageModels_[i] = Model(engine::assetPath(stageFiles[i]));
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: " << e.what() << " - using a placeholder plant\n";
+        }
+    }
+    fallbackPlant_ = GpuMesh(prim::sphere(0.05f));
+
     tankBacking_ = GpuMesh(merge({
         prim::box({kTankWindowMin.x, kTankWindowMin.y, kTankMax.z}, {kTankWindowMax.x, kTankWindowMax.y, kTankMax.z + 0.01f}),
     }));
@@ -200,5 +212,30 @@ void Renderer3D::drawPots(const garden::Garden& garden)
         const float wet = garden.moistureRatio(i);
         const glm::vec3 soil = glm::mix(glm::vec3(0.66f, 0.50f, 0.33f), glm::vec3(0.30f, 0.19f, 0.11f), wet);
         drawMesh(potSoil_, model, {&soilTex_, soil, 0.05f, 8.0f});
+
+        // Plant model for the current stage, standing on the soil; each pot is turned differently.
+        if (garden.pot(i).hasPlant()) {
+            glm::mat4 plant = glm::rotate(glm::translate(glm::mat4(1.0f), soilCenter(i)),
+                                                glm::radians(40.0f + 110.0f * float(i)), glm::vec3(0.0f, 1.0f, 0.0f));
+            plant = glm::scale(plant, glm::vec3(kPlantScale));
+            drawPlant(garden.pot(i).stage, plant);
+        }
     }
+}
+
+void Renderer3D::drawPlant(garden::Stage stage, const glm::mat4& model)
+{
+    const int index = stage == garden::Stage::Seed ? 0 : stage == garden::Stage::Sprout ? 1 : 2;
+    const Model& m = stageModels_[index];
+    if (m.empty()) {
+        const float size = 0.4f + 0.6f * float(index);
+        drawMesh(fallbackPlant_, glm::scale(glm::translate(model, glm::vec3(0.0f, 0.05f * size, 0.0f)), glm::vec3(size)),
+                 {nullptr, glm::vec3(0.3f, 0.65f, 0.25f), 0.3f, 32.0f});
+        return;
+    }
+    scene_.setMat4("uModel", model);
+    scene_.setMat3("uNormalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+    scene_.setVec3("uMaterial.emission", glm::vec3(0.0f));
+    scene_.setFloat("uMaterial.alpha", 1.0f);
+    m.Draw(scene_);
 }

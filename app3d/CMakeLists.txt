@@ -4,7 +4,7 @@ add_executable(space_garden_3d
     OrbitCamera.cpp
     Primitives.cpp
     Renderer3D.cpp)
-target_link_libraries(space_garden_3d PRIVATE garden_engine)
+target_link_libraries(space_garden_3d PRIVATE garden_engine assimp::assimp)
 if(NOT MSVC)
     target_compile_options(space_garden_3d PRIVATE -Wall -Wextra)
 endif()

@@ -26,8 +26,10 @@ constexpr float kPotZ = -0.6f;
 inline const prim::PotDims kPot{};
 inline glm::vec3 potBase(int i) { return {kPotX[i], kFloorY, kPotZ}; }
 inline glm::vec3 soilCenter(int i) { return potBase(i) + glm::vec3(0.0f, kPot.soilY(), 0.0f); }
+// Plant models are authored in meters and drawn a bit larger to read well from the camera arc.
+constexpr float kPlantScale = 1.5f;
 // Height of the clickable volume above the soil for each stage (empty, seed, sprout, mature).
-constexpr float kPlantHeight[4] = {0.05f, 0.08f, 0.26f, 0.58f};
+constexpr float kPlantHeight[4] = {0.05f, 0.08f, 0.30f, 0.82f};
 
 // Shared lamp under the roof, above the pots, and its spotlight.
 constexpr glm::vec3 kLampMin{-1.35f, 1.58f, -0.72f};

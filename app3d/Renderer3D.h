@@ -7,6 +7,7 @@
 
 #include <garden/Garden.h>
 
+#include <learnopengl/model.h>
 #include <learnopengl/shader.h>
 
 #include <glm/glm.hpp>
@@ -40,6 +41,7 @@ private:
     void drawPots(const garden::Garden& garden);
     void drawLamp(const garden::Garden& garden);
     void drawTank(const garden::Garden& garden);
+    void drawPlant(garden::Stage stage, const glm::mat4& model);
 
     Shader scene_;
 
@@ -49,4 +51,9 @@ private:
     GpuMesh potShell_, potSoil_, potStripe_;
     GpuMesh lampBody_, lampMounts_, lampStrip_;
     GpuMesh tankBody_, tankBacking_;
+
+    // Plant models for the seed, sprout and mature stages (Assimp). If a file is missing, a simple
+    // procedural stand-in is drawn instead.
+    Model stageModels_[3];
+    GpuMesh fallbackPlant_;
 };
