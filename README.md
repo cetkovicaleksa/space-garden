@@ -21,6 +21,13 @@ cmake --build build -j
 ./build/app2d/space_garden_2d
 ```
 
+Run the logic unit tests, or play the logic in a console:
+
+```sh
+ctest --test-dir build --output-on-failure
+./build/tests/garden_cli
+```
+
 ## Documentation
 
 - `docs/proposal.pdf` — project proposal
