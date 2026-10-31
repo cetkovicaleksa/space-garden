@@ -59,6 +59,7 @@ add_subdirectory(core)
 add_subdirectory(tests)
 add_subdirectory(engine)
 add_subdirectory(app2d)
+add_subdirectory(app3d)
 
 # Release package: the app plus assets/ next to it (found at runtime relative to the executable).
 install(DIRECTORY assets/ DESTINATION assets)
