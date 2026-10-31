@@ -1,5 +1,6 @@
 # garden_engine: OpenGL/GLFW helpers shared by the 2D and 3D apps.
 add_library(garden_engine STATIC
+    src/Cursor.cpp
     src/NameTag.cpp
     src/Paths.cpp
     src/SpriteRenderer.cpp

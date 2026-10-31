@@ -1,4 +1,5 @@
 // Space Garden 2D - entry point.
+#include "engine/Cursor.h"
 #include "engine/NameTag.h"
 #include "engine/Paths.h"
 #include "engine/SpriteRenderer.h"
@@ -6,6 +7,7 @@
 #include "engine/Window.h"
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <cstdlib>
@@ -19,6 +21,12 @@ int main()
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        engine::GloveCursor cursor(window.handle());
+        window.setMouseButtonCallback([&](int button, int action, int) {
+            if (button == GLFW_MOUSE_BUTTON_LEFT)
+                cursor.setPressed(action == GLFW_PRESS);
+        });
 
         engine::SpriteRenderer sprites;
         engine::NameTag nameTag;
