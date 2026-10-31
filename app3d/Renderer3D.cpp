@@ -128,9 +128,29 @@ Renderer3D::Renderer3D()
     }
     fallbackPlant_ = GpuMesh(prim::sphere(0.05f));
 
+    selectRim_ = GpuMesh(moved(prim::ring(kPot.topRadius + 0.004f, kPot.topRadius + 0.026f, 0.014f),
+                               {0.0f, kPot.height - 0.018f, 0.0f}));
+    selectFloor_ = GpuMesh(prim::ring(kPot.bottomRadius + 0.03f, kPot.bottomRadius + 0.075f, 0.004f));
+
     tankBacking_ = GpuMesh(merge({
         prim::box({kTankWindowMin.x, kTankWindowMin.y, kTankMax.z}, {kTankWindowMax.x, kTankWindowMax.y, kTankMax.z + 0.01f}),
     }));
+}
+
+int Renderer3D::pickPot(const garden::Garden& garden, const picking::Ray& ray)
+{
+    int best = -1;
+    float bestT = 0.0f;
+    for (int i = 0; i < kPotCount && i < garden.potCount(); ++i) {
+        // Bounding cylinder of the pot and the plant currently growing in it.
+        const float height = kPot.soilY() + kPlantHeight[int(garden.pot(i).stage)];
+        const auto t = picking::intersectCylinder(ray, potBase(i), kPot.topRadius + 0.03f, std::max(height, kPot.height));
+        if (t && (best < 0 || *t < bestT)) {
+            best = i;
+            bestT = *t;
+        }
+    }
+    return best;
 }
 
 void Renderer3D::drawMesh(const GpuMesh& mesh, const glm::mat4& model, const Material& m)
@@ -206,7 +226,16 @@ void Renderer3D::drawPots(const garden::Garden& garden)
 {
     for (int i = 0; i < kPotCount && i < garden.potCount(); ++i) {
         const glm::mat4 model = glm::translate(glm::mat4(1.0f), potBase(i));
-        drawMesh(potShell_, model, {nullptr, glm::vec3(0.86f, 0.88f, 0.92f), 0.6f, 64.0f});
+        // Selection: glowing rings at the rim and on the floor plus a faint tint; hover: dim rings.
+        const bool selected = garden.selected() == i;
+        const bool hovered = !selected && hovered_ == i;
+        const glm::vec3 tint = selected ? glm::vec3(0.04f, 0.12f, 0.16f) : glm::vec3(0.0f);
+        drawMesh(potShell_, model, {nullptr, glm::vec3(0.86f, 0.88f, 0.92f), 0.6f, 64.0f, tint});
+        if (selected || hovered) {
+            const glm::vec3 glow = selected ? glm::vec3(0.35f, 0.85f, 1.0f) : glm::vec3(0.12f, 0.30f, 0.36f);
+            drawMesh(selectRim_, model, {nullptr, glm::vec3(0.0f), 0.0f, 1.0f, glow});
+            drawMesh(selectFloor_, model, {nullptr, glm::vec3(0.0f), 0.0f, 1.0f, glow});
+        }
         drawMesh(potStripe_, model, {nullptr, glm::vec3(0.27f, 0.55f, 0.86f), 0.5f, 48.0f});
         // Soil darkens with moisture.
         const float wet = garden.moistureRatio(i);

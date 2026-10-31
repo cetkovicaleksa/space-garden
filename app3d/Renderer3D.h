@@ -2,6 +2,7 @@
 
 #include "GpuMesh.h"
 #include "OrbitCamera.h"
+#include "Picking.h"
 
 #include "engine/Texture.h"
 
@@ -25,6 +26,10 @@ public:
     };
 
     void draw(const garden::Garden& garden, const Frame& frame);
+    void setHovered(int potIndex) { hovered_ = potIndex; }
+
+    // Index of the nearest pot (with its plant) hit by the ray, or -1.
+    static int pickPot(const garden::Garden& garden, const picking::Ray& ray);
 
 private:
     struct Material {
@@ -56,4 +61,7 @@ private:
     // procedural stand-in is drawn instead.
     Model stageModels_[3];
     GpuMesh fallbackPlant_;
+
+    GpuMesh selectRim_, selectFloor_;
+    int hovered_ = -1;
 };

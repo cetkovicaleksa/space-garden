@@ -59,9 +59,26 @@ int main()
         bool depthTest = true;
         bool faceCulling = true;
 
+        // The scene is framed above the info panel by shifting the image up (the camera still
+        // looks straight at the garden center). Picking uses the same matrices.
+        const float lensShift = (kPanelMargin + kPanelHeight) / kHudHeight;
+        auto rayAtCursor = [&]() {
+            double x = 0.0, y = 0.0;
+            window.cursorPos(x, y);
+            return picking::rayFromScreen(x, y, window.width(), window.height(), camera.view(),
+                                          camera.projection(window.aspect(), lensShift));
+        };
+
         window.setMouseButtonCallback([&](int button, int action, int) {
-            if (button == GLFW_MOUSE_BUTTON_LEFT)
-                cursor.setPressed(action == GLFW_PRESS);
+            if (button != GLFW_MOUSE_BUTTON_LEFT)
+                return;
+            cursor.setPressed(action == GLFW_PRESS);
+            if (action == GLFW_PRESS) {
+                // Clicking outside the pots keeps the current selection.
+                const int pot = Renderer3D::pickPot(garden, rayAtCursor());
+                if (pot >= 0)
+                    garden.select(pot);
+            }
         });
         window.setKeyCallback([&](int key, int, int action, int) {
             if (action != GLFW_PRESS)
@@ -92,9 +109,7 @@ int main()
             glClearColor(0.03f, 0.04f, 0.08f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // The scene is framed above the info panel by shifting the image up (the camera still
-            // looks straight at the garden center).
-            const float lensShift = (kPanelMargin + kPanelHeight) / kHudHeight;
+            renderer.setHovered(Renderer3D::pickPot(garden, rayAtCursor()));
             if (depthTest) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
             if (faceCulling) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE);
             glCullFace(GL_BACK);
