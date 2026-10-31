@@ -32,6 +32,9 @@ public:
 private:
     void drawCabinet();
     void drawPots(const garden::Garden& garden, float time);
+    void drawLamp(const garden::Garden& garden, float time);
+    void drawLampBeam(const garden::Garden& garden, float time);
+    void drawTank(const garden::Garden& garden, float time);
 
     engine::SpriteRenderer sprites_;
     engine::TextRenderer title_;

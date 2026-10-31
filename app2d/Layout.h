@@ -53,6 +53,11 @@ inline Rect potHitRect(int i)
     return {p.pos, {p.size.x, plantRect(i).top() - p.pos.y}};
 }
 
+// Droplets fall from this height above the soil (normalized y = 1) down to the soil (y = 0).
+constexpr float kDropletFall = 270.0f;
+constexpr float kDropletSpreadX = 80.0f; // half-width of the stream for x in [-1, 1]
+constexpr glm::vec2 kDropletSize{24.0f, 36.0f};
+
 // Shared lamp under the cabinet roof, above the pots.
 constexpr Rect kLamp{{250.0f, 868.0f}, {1060.0f, 64.0f}};
 

@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 using namespace layout;
 
@@ -71,7 +72,10 @@ void Renderer2D::draw(const garden::Garden& garden, float time)
     title_.draw("Space Garden", kCabinet.pos.x, kCabinet.top() + 30.0f, 1.0f, {0.85f, 0.92f, 1.0f, 1.0f});
 
     drawCabinet();
+    drawLamp(garden, time);
+    drawTank(garden, time);
     drawPots(garden, time);
+    drawLampBeam(garden, time); // transparent, drawn after the pots so they show through it
 
     panel_.draw(garden, sprites_, kPanel.pos, kPanel.size);
     nameTag_.draw(sprites_, {kWidth, kHeight});
@@ -97,10 +101,43 @@ void Renderer2D::drawCabinet()
     // Lamp mounts.
     for (float x : {kLamp.pos.x + 80.0f, kLamp.right() - 92.0f})
         sprites_.drawRect({x, kLamp.top() - 4.0f}, {12.0f, kInterior.top() - kLamp.top() + 4.0f}, {0.30f, 0.33f, 0.40f, 1.0f});
-    sprites_.draw(lamp_, kLamp.pos, kLamp.size, {0.75f, 0.75f, 0.78f, 1.0f});
+}
 
-    // Tank (water comes in step 12).
+void Renderer2D::drawLamp(const garden::Garden& garden, float)
+{
+    if (garden.lamp().on) {
+        // Bright lamp surface with a soft halo around the light strip.
+        sprites_.drawRect({kLamp.pos.x + 10.0f, kLamp.pos.y - 8.0f}, {kLamp.size.x - 20.0f, 30.0f}, {1.0f, 0.92f, 0.6f, 0.25f});
+        sprites_.draw(lamp_, kLamp.pos, kLamp.size, {1.0f, 0.97f, 0.85f, 1.0f});
+        sprites_.drawRect({kLamp.pos.x + 26.0f, kLamp.pos.y + 4.0f}, {kLamp.size.x - 52.0f, 14.0f}, {1.0f, 0.96f, 0.75f, 1.0f});
+    } else {
+        sprites_.draw(lamp_, kLamp.pos, kLamp.size, {0.55f, 0.56f, 0.60f, 1.0f});
+    }
+}
+
+void Renderer2D::drawLampBeam(const garden::Garden& garden, float time)
+{
+    if (!garden.lamp().on)
+        return;
+    // Semi-transparent light cone from the lamp down to the shelf (alpha blending).
+    const float flicker = 0.96f + 0.04f * std::sin(time * 3.0f);
+    const glm::vec2 pos{kLamp.pos.x + 10.0f, kFloorY};
+    const glm::vec2 size{kLamp.size.x - 20.0f, kLamp.pos.y + 6.0f - kFloorY};
+    sprites_.draw(beam_, pos, size, {1.0f, 0.93f, 0.62f, 0.30f * flicker});
+}
+
+void Renderer2D::drawTank(const garden::Garden& garden, float time)
+{
+    // Dark glass background, then water whose height is the tank ratio, then frame and glass highlight.
     sprites_.drawRect(kTankWater.pos, kTankWater.size, {0.06f, 0.08f, 0.12f, 1.0f});
+    const float ratio = std::clamp(garden.tank().ratio(), 0.0f, 1.0f);
+    if (ratio > 0.0f) {
+        const float h = kTankWater.size.y * ratio;
+        sprites_.drawGradient(kTankWater.pos, {kTankWater.size.x, h}, {0.08f, 0.32f, 0.75f, 1.0f}, {0.20f, 0.58f, 1.0f, 1.0f});
+        const float wave = 2.0f * std::sin(time * 2.5f);
+        sprites_.drawRect({kTankWater.pos.x, kTankWater.pos.y + h - 6.0f + wave * 0.5f}, {kTankWater.size.x, 6.0f},
+                          {0.65f, 0.85f, 1.0f, 0.8f});
+    }
     sprites_.draw(tank_, kTank.pos, kTank.size);
     sprites_.draw(tankGlass_, kTank.pos, kTank.size);
 }
@@ -127,6 +164,14 @@ void Renderer2D::drawPots(const garden::Garden& garden, float)
         if (plant) {
             const Rect pr = plantRect(i);
             sprites_.draw(*plant, pr.pos, pr.size);
+        }
+
+        // Falling droplets: core gives normalized height above the soil (1 = spawn, 0 = soil).
+        for (const garden::Droplet& d : state.droplets) {
+            if (!d.visible())
+                continue;
+            const glm::vec2 c{kPotCentersX[i] + d.x * kDropletSpreadX, soilY(i) + d.y * kDropletFall};
+            sprites_.draw(droplet_, c - glm::vec2(0.5f * kDropletSize.x, 0.0f), kDropletSize, {1.0f, 1.0f, 1.0f, 0.95f});
         }
 
         sprites_.draw(pot_, pot.pos, pot.size);
