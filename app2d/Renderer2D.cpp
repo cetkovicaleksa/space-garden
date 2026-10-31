@@ -110,8 +110,25 @@ void Renderer2D::drawPots(const garden::Garden& garden, float)
     for (int i = 0; i < garden.potCount() && i < kPotCount; ++i) {
         const garden::Pot& state = garden.pot(i);
         const Rect pot = potRect(i);
+        // Soil color darkens with moisture.
+        const float wet = garden.moistureRatio(i);
+        const glm::vec4 dry(0.66f, 0.50f, 0.33f, 1.0f), soaked(0.30f, 0.19f, 0.11f, 1.0f);
         const Rect soil{{pot.pos.x + 26.0f, soilY(i) - 16.0f}, {pot.size.x - 52.0f, 32.0f}};
-        sprites_.draw(soil_, soil.pos, soil.size, {0.55f, 0.40f, 0.26f, 1.0f});
+        sprites_.draw(soil_, soil.pos, soil.size, glm::mix(dry, soaked, wet));
+
+        // Plant sprite for the current stage, standing in the soil (its base hides behind the rim).
+        const engine::Texture2D* plant = nullptr;
+        switch (state.stage) {
+        case garden::Stage::Seed:   plant = &seed_; break;
+        case garden::Stage::Sprout: plant = &sprout_; break;
+        case garden::Stage::Mature: plant = &mature_; break;
+        case garden::Stage::Empty:  break;
+        }
+        if (plant) {
+            const Rect pr = plantRect(i);
+            sprites_.draw(*plant, pr.pos, pr.size);
+        }
+
         sprites_.draw(pot_, pot.pos, pot.size);
 
         // Selection: colored frame around the pot and its plant; hover: faint frame.
