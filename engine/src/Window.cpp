@@ -15,7 +15,7 @@
 #define NOMINMAX
 #endif
 #include <windows.h>
-#include <timeapi.h>
+#include <mmsystem.h> // timeBeginPeriod (timeapi.h is missing in older MinGW)
 #endif
 
 namespace engine {
