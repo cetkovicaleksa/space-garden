@@ -26,6 +26,19 @@ FetchContent_Declare(glfw
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(glfw)
 
+# --- FreeType 2.13 (text rendering) ----------------------------------------
+set(FT_DISABLE_ZLIB     ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_BZIP2    ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_PNG      ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
+set(FT_DISABLE_BROTLI   ON CACHE BOOL "" FORCE)
+set(SKIP_INSTALL_ALL    ON CACHE BOOL "" FORCE)
+FetchContent_Declare(freetype
+    GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG        VER-2-13-3
+    GIT_SHALLOW    TRUE)
+FetchContent_MakeAvailable(freetype)
+
 # --- Vendored headers (glad, KHR, glm, stb_image, learnopengl) --------------
 add_library(vendor_headers INTERFACE)
 target_include_directories(vendor_headers SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

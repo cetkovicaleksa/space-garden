@@ -1,6 +1,8 @@
 // Space Garden 2D - entry point.
 #include "engine/NameTag.h"
+#include "engine/Paths.h"
 #include "engine/SpriteRenderer.h"
+#include "engine/TextRenderer.h"
 #include "engine/Window.h"
 
 #include <glad/glad.h>
@@ -20,6 +22,7 @@ int main()
 
         engine::SpriteRenderer sprites;
         engine::NameTag nameTag;
+        engine::TextRenderer text(engine::assetPath("fonts/DejaVuSans.ttf"), 48);
 
         while (!window.shouldClose()) {
             window.beginFrame();
@@ -34,6 +37,12 @@ int main()
             sprites.drawRect({screen.x * 0.55f, screen.y * 0.80f}, {screen.x * 0.4f, screen.y * 0.18f},
                              {0.35f, 0.75f, 0.45f, 1.0f});
             nameTag.draw(sprites, screen);
+
+            // Text test: several sizes and colors.
+            text.setProjection(glm::ortho(0.0f, screen.x, 0.0f, screen.y));
+            text.draw("Space Garden", 60.0f, screen.y * 0.5f, 1.5f, {1.0f, 1.0f, 1.0f, 1.0f});
+            text.draw("Moisture 75%  Growth 33%", 60.0f, screen.y * 0.5f - 80.0f, 0.8f, {0.5f, 0.8f, 1.0f, 1.0f});
+            text.draw("Aleksa Ćetković - čćšžđ", 60.0f, screen.y * 0.5f - 140.0f, 0.6f, {1.0f, 0.8f, 0.3f, 0.8f});
 
             window.endFrame();
         }
