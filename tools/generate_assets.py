@@ -222,6 +222,22 @@ def soil():
     img.save(TEX / "soil.png")
 
 
+def soil_tile():
+    """Tileable soil grains for the 3D pots (gray, tinted by moisture in the shader)."""
+    n = 256
+    rng = random.Random(11)
+    img = Image.new("RGB", (n, n), (150, 150, 150))
+    d = ImageDraw.Draw(img)
+    for _ in range(2600):
+        x, y = rng.randint(0, n - 1), rng.randint(0, n - 1)
+        r = rng.choice((1, 2, 2, 3))
+        v = rng.randint(95, 255)
+        for ox in (-n, 0, n):  # wrap around the edges so the texture tiles
+            for oy in (-n, 0, n):
+                d.ellipse((x + ox - r, y + oy - r, x + ox + r, y + oy + r), fill=(v, v, v))
+    img.save(TEX / "soil_tile.png")
+
+
 def _leaf(d, cx, cy, length, width, angle, fill, outline, s):
     pts = []
     for i in range(0, 41):
@@ -361,6 +377,7 @@ def main():
     wall()
     pot()
     soil()
+    soil_tile()
     plants()
     lamp()
     beam()

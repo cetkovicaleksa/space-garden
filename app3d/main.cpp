@@ -1,18 +1,15 @@
 // Space Garden 3D - entry point: owns the Garden, maps input to it, renders it in perspective.
-#include "GpuMesh.h"
 #include "OrbitCamera.h"
-#include "Primitives.h"
+#include "Renderer3D.h"
+#include "Scene.h"
 
 #include "engine/Cursor.h"
-#include "engine/Paths.h"
 #include "engine/Window.h"
 
 #include <garden/Garden.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/gtc/matrix_transform.hpp>
-#include <learnopengl/shader.h>
 
 #include <cstdlib>
 #include <exception>
@@ -33,9 +30,8 @@ int main()
         engine::GloveCursor cursor(window.handle());
         garden::Garden garden;
 
-        OrbitCamera camera({0.0f, 0.5f, 0.0f}, 3.5f, OrbitCamera::Limits{});
-        Shader shader(engine::shaderPath("scene.vs"), engine::shaderPath("scene.fs"));
-        GpuMesh cube(prim::box({-0.5f, 0.0f, -0.5f}, {0.5f, 1.0f, 0.5f}));
+        OrbitCamera camera(scene::kGardenCenter, 3.9f, OrbitCamera::Limits{});
+        Renderer3D renderer;
 
         glEnable(GL_DEPTH_TEST);
         window.setMouseButtonCallback([&](int button, int action, int) {
@@ -55,13 +51,7 @@ int main()
             glClearColor(0.03f, 0.04f, 0.08f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            shader.use();
-            shader.setMat4("uView", camera.view());
-            shader.setMat4("uProjection", camera.projection(window.aspect()));
-            shader.setMat4("uModel", glm::mat4(1.0f));
-            shader.setMat3("uNormalMatrix", glm::mat3(1.0f));
-            shader.setVec3("uColor", glm::vec3(0.4f, 0.7f, 1.0f));
-            cube.draw();
+            renderer.draw(garden, {camera.view(), camera.projection(window.aspect()), camera.position(), float(window.time())});
 
             window.endFrame();
         }
