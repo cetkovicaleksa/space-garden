@@ -9,7 +9,7 @@ class OrbitCamera {
 public:
     struct Limits {
         float minYawDeg = -40.0f, maxYawDeg = 40.0f; // 0 = straight in front of the cabinet
-        float minHeight = 0.55f, maxHeight = 2.6f;   // world-space y of the camera
+        float minHeight = 0.55f, maxHeight = 2.4f;   // world-space y of the camera
     };
 
     OrbitCamera(glm::vec3 target, float radius, Limits limits);

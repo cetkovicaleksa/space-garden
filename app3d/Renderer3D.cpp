@@ -103,8 +103,8 @@ Renderer3D::Renderer3D()
 
     lampBody_ = GpuMesh(prim::box(kLampMin, kLampMax, 2.0f));
     lampMounts_ = GpuMesh(merge({
-        prim::box({kLampMin.x + 0.15f, kLampMax.y, -0.62f}, {kLampMin.x + 0.19f, kCabinetMax.y - kPanel, -0.58f}),
-        prim::box({kLampMax.x - 0.19f, kLampMax.y, -0.62f}, {kLampMax.x - 0.15f, kCabinetMax.y - kPanel, -0.58f}),
+        prim::box({kLampMin.x + 0.15f, kLampMax.y, -0.53f}, {kLampMin.x + 0.19f, kCabinetMax.y - kPanel, -0.49f}),
+        prim::box({kLampMax.x - 0.19f, kLampMax.y, -0.53f}, {kLampMax.x - 0.15f, kCabinetMax.y - kPanel, -0.49f}),
     }));
     lampStrip_ = GpuMesh(prim::box({kLampMin.x + 0.06f, kLampMin.y - 0.02f, kLampMin.z + 0.06f},
                                    {kLampMax.x - 0.06f, kLampMin.y, kLampMax.z - 0.06f}));
@@ -144,6 +144,19 @@ void Renderer3D::draw(const garden::Garden& garden, const Frame& f)
     scene_.setVec3("uViewPos", f.cameraPos);
     scene_.setInt("uTexture", 0);
 
+    // Lamp spotlight; the weak ambient light keeps the cabinet visible when it is off.
+    const bool on = garden.lamp().on;
+    scene_.setBool("uLight.on", on);
+    scene_.setVec3("uLight.position", kLightPos);
+    scene_.setVec3("uLight.direction", glm::normalize(kLightDir));
+    scene_.setFloat("uLight.cutOff", std::cos(glm::radians(kLightInnerDeg)));
+    scene_.setFloat("uLight.outerCutOff", std::cos(glm::radians(kLightOuterDeg)));
+    scene_.setVec3("uLight.color", glm::vec3(1.0f, 0.94f, 0.80f) * 1.6f);
+    scene_.setFloat("uLight.constant", 1.0f);
+    scene_.setFloat("uLight.linear", 0.09f);
+    scene_.setFloat("uLight.quadratic", 0.032f);
+    scene_.setVec3("uAmbient", on ? glm::vec3(0.24f, 0.26f, 0.32f) : glm::vec3(0.20f, 0.22f, 0.28f));
+
     drawCabinet();
     drawLamp(garden);
     drawTank(garden);
@@ -153,7 +166,7 @@ void Renderer3D::draw(const garden::Garden& garden, const Frame& f)
 void Renderer3D::drawCabinet()
 {
     const glm::mat4 I(1.0f);
-    drawMesh(cabinet_, I, {&metal_, glm::vec3(0.85f), 0.35f, 24.0f});
+    drawMesh(cabinet_, I, {&metal_, glm::vec3(0.80f), 0.20f, 24.0f});
     drawMesh(cabinetInner_, I, {&wall_, glm::vec3(1.0f), 0.1f, 16.0f});
     // The view to space glows on its own, so it stays visible with the lamp off.
     drawMesh(windowQuad_, I, {&space_, glm::vec3(0.0f), 0.0f, 1.0f, glm::vec3(1.0f)});

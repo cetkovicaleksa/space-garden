@@ -30,10 +30,12 @@ inline glm::vec3 soilCenter(int i) { return potBase(i) + glm::vec3(0.0f, kPot.so
 constexpr float kPlantHeight[4] = {0.05f, 0.08f, 0.26f, 0.58f};
 
 // Shared lamp under the roof, above the pots, and its spotlight.
-constexpr glm::vec3 kLampMin{-1.35f, 1.58f, -0.80f};
-constexpr glm::vec3 kLampMax{0.55f, 1.70f, -0.40f};
-constexpr glm::vec3 kLightPos{-0.4f, 1.555f, -0.6f};
-constexpr glm::vec3 kLightDir{0.0f, -1.0f, 0.0f};
+constexpr glm::vec3 kLampMin{-1.35f, 1.58f, -0.72f};
+constexpr glm::vec3 kLampMax{0.55f, 1.70f, -0.30f};
+// The light sits at the front of the lamp and is tilted slightly backwards, so it also reaches
+// the front of the pots and plants instead of only their tops.
+constexpr glm::vec3 kLightPos{-0.4f, 1.555f, -0.42f};
+constexpr glm::vec3 kLightDir{0.0f, -1.0f, -0.22f}; // normalized in the shader
 constexpr float kLightInnerDeg = 34.0f;
 constexpr float kLightOuterDeg = 50.0f;
 
@@ -49,6 +51,6 @@ constexpr float kDropletSpread = 0.09f; // stream half-width for x in [-1, 1]
 constexpr float kDropletRadius = 0.018f;
 
 // The camera always looks at the middle of the garden.
-constexpr glm::vec3 kGardenCenter{-0.05f, 0.72f, -0.6f};
+constexpr glm::vec3 kGardenCenter{-0.05f, 0.88f, -0.6f};
 
 } // namespace scene
