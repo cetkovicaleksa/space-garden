@@ -28,8 +28,17 @@ int main()
                                       "L  lamp on/off", "R  refill tank", "Esc  quit"});
 
         window.setMouseButtonCallback([&](int button, int action, int) {
-            if (button == GLFW_MOUSE_BUTTON_LEFT)
-                cursor.setPressed(action == GLFW_PRESS);
+            if (button != GLFW_MOUSE_BUTTON_LEFT)
+                return;
+            cursor.setPressed(action == GLFW_PRESS);
+            if (action == GLFW_PRESS) {
+                double x = 0.0, y = 0.0;
+                window.cursorPos(x, y);
+                // Clicking outside the pots keeps the current selection.
+                const int pot = renderer.pickPot(renderer.toVirtual(x, y));
+                if (pot >= 0)
+                    garden.select(pot);
+            }
         });
         window.setKeyCallback([&](int key, int, int action, int) {
             if (action != GLFW_PRESS)
@@ -51,6 +60,9 @@ int main()
             renderer.panel().update(dt);
 
             renderer.beginFrame(window.width(), window.height());
+            double mx = 0.0, my = 0.0;
+            window.cursorPos(mx, my);
+            renderer.setHovered(renderer.pickPot(renderer.toVirtual(mx, my)));
             renderer.draw(garden, float(window.time()));
 
             window.endFrame();

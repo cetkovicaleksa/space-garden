@@ -108,9 +108,19 @@ void Renderer2D::drawCabinet()
 void Renderer2D::drawPots(const garden::Garden& garden, float)
 {
     for (int i = 0; i < garden.potCount() && i < kPotCount; ++i) {
+        const garden::Pot& state = garden.pot(i);
         const Rect pot = potRect(i);
         const Rect soil{{pot.pos.x + 26.0f, soilY(i) - 16.0f}, {pot.size.x - 52.0f, 32.0f}};
         sprites_.draw(soil_, soil.pos, soil.size, {0.55f, 0.40f, 0.26f, 1.0f});
         sprites_.draw(pot_, pot.pos, pot.size);
+
+        // Selection: colored frame around the pot and its plant; hover: faint frame.
+        // The frame hugs the pot when empty and grows to include the plant.
+        const Rect hit = state.hasPlant() ? potHitRect(i) : Rect{potRect(i).pos, {potRect(i).size.x, potRect(i).size.y + 24.0f}};
+        const glm::vec2 pad(12.0f);
+        if (garden.selected() == i)
+            sprites_.drawFrame(hit.pos - pad, hit.size + 2.0f * pad, 5.0f, {0.35f, 0.85f, 1.0f, 1.0f});
+        else if (hovered_ == i)
+            sprites_.drawFrame(hit.pos - pad, hit.size + 2.0f * pad, 3.0f, {0.35f, 0.85f, 1.0f, 0.35f});
     }
 }

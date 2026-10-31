@@ -20,6 +20,7 @@ public:
     // Letterbox the virtual canvas into the framebuffer; call once per frame before draw().
     void beginFrame(int framebufferWidth, int framebufferHeight);
     void draw(const garden::Garden& garden, float time);
+    void setHovered(int potIndex) { hovered_ = potIndex; }
 
     // Framebuffer pixel (origin top-left) -> virtual canvas coordinates (origin bottom-left).
     glm::vec2 toVirtual(double px, double py) const;
@@ -43,4 +44,5 @@ private:
 
     glm::vec2 viewportOffset_{0.0f};
     float viewportScale_ = 1.0f;
+    int hovered_ = -1;
 };
